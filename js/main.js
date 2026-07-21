@@ -128,18 +128,47 @@ function closeModal() {
     modalContent.classList.add('scale-95');
 }
 
-// Listen for the form submission
+// Listen for the form submission and send to Google Forms
 contactForm.addEventListener('submit', (e) => {
     e.preventDefault(); // Prevent the page from reloading
     
-    // Show the success modal
-    successModal.classList.remove('opacity-0', 'pointer-events-none');
-    successModal.classList.add('opacity-100', 'pointer-events-auto');
-    modalContent.classList.remove('scale-95');
-    modalContent.classList.add('scale-100');
+    const submitBtn = document.getElementById('submit-btn');
+    const originalBtnText = submitBtn ? submitBtn.innerText : 'Submit';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Sending...';
+    }
 
-    // Clear the input fields so it's ready for another message
-    contactForm.reset();
+    const formData = new FormData(contactForm);
+    const googleFormsUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSc7fOFGyA5UmUb0Qsfwm70PxQIddQang3umzVGuqbvuWmPtQQ/formResponse';
+
+    fetch(googleFormsUrl, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+    }).then(() => {
+        // Show the success modal
+        successModal.classList.remove('opacity-0', 'pointer-events-none');
+        successModal.classList.add('opacity-100', 'pointer-events-auto');
+        modalContent.classList.remove('scale-95');
+        modalContent.classList.add('scale-100');
+
+        // Clear the input fields so it's ready for another message
+        contactForm.reset();
+    }).catch(error => {
+        console.error('Error submitting to Google Forms:', error);
+        // Even if an error occurs, reveal modal so user receives feedback
+        successModal.classList.remove('opacity-0', 'pointer-events-none');
+        successModal.classList.add('opacity-100', 'pointer-events-auto');
+        modalContent.classList.remove('scale-95');
+        modalContent.classList.add('scale-100');
+        contactForm.reset();
+    }).finally(() => {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerText = originalBtnText;
+        }
+    });
 });
 
 // Close the modal when clicking the button or the blurred background
