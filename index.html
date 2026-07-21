@@ -13,6 +13,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -54,18 +55,18 @@
         </header>
 
         <!-- First Page / Hero Section (Exactly 1 screen height) -->
-        <div class="w-full h-screen relative flex flex-col items-center justify-center page-section">
+        <div class="w-full h-screen relative flex flex-col items-center justify-center page-section gap-16 md:gap-0">
             
-            <!-- Hero Section Content: Name (Upper Left, Below Portfolio) -->
-            <div class="absolute top-28 md:top-36 left-8 md:left-12 flex flex-col z-10">
+            <!-- Hero Section Content: Name (Centered on mobile, Upper Left on PC) -->
+            <div class="relative md:absolute md:top-36 md:left-12 flex flex-col z-10 text-center md:text-left">
                 <!-- Replaced font-black with vast-shadow-regular -->
                 <h1 class="vast-shadow-regular text-white text-4xl md:text-6xl lg:text-[7rem] tracking-tighter leading-[0.85] opacity-90 hover:opacity-100 transition-opacity duration-500">
                     DEEPAK<br>DINESH
                 </h1>
             </div>
 
-            <!-- Hero Section Content: Role (Bottom Right) -->
-            <div class="absolute bottom-16 md:bottom-24 right-8 md:right-12 flex flex-col z-10 text-right">
+            <!-- Hero Section Content: Role (Centered on mobile, Bottom Right on PC) -->
+            <div class="relative md:absolute md:bottom-24 md:right-12 flex flex-col z-10 text-center md:text-right">
                 <h2 class="text-gray-300 text-3xl md:text-5xl lg:text-[5rem] font-black tracking-tighter leading-[0.85] opacity-80 hover:opacity-100 transition-opacity duration-500">
                     FULL STACK<br>DEVELOPER
                 </h2>
