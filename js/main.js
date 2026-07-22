@@ -3,13 +3,13 @@ const popupBox = document.getElementById('popup-box');
 const filler = document.getElementById('filler');
 const portfolioText = document.getElementById('portfolio-text');
 
-window.addEventListener('DOMContentLoaded', function() {
-    
+window.addEventListener('DOMContentLoaded', function () {
+
     // 1. Show the box initially
     setTimeout(() => {
         popupContainer.classList.remove('popup-hidden');
         popupContainer.classList.add('popup-visible');
-        
+
         popupBox.classList.remove('box-hidden');
         popupBox.classList.add('box-visible');
     }, 100);
@@ -24,29 +24,29 @@ window.addEventListener('DOMContentLoaded', function() {
         popupBox.classList.add('box-expand');
         portfolioText.classList.add('text-fade-out');
         // Trigger the shift to #1A1A1A while expanding
-        filler.classList.add('color-shift'); 
-    }, 3200); 
+        filler.classList.add('color-shift');
+    }, 3200);
 
     // 4. Seamlessly transition to the actual scrolling webpage!
     setTimeout(() => {
         const body = document.body;
-        
+
         // Swap the body to your requested gradient
         body.classList.remove('bg-white', 'justify-center');
         body.classList.add('bg-gradient-to-b', 'from-[#1A1A1A]', 'to-[#302C29]', 'justify-start', 'min-h-[200vh]');
-        
+
         // Unlock scrolling but strictly prevent horizontal scroll!
         body.classList.remove('overflow-hidden');
         body.classList.add('overflow-x-hidden');
-        
+
         // Fade out the animation overlay to reveal the identical #1A1A1A top of the page body
         popupContainer.style.opacity = '0';
-        
+
         // Reveal the scroll indicator
         const mainContent = document.getElementById('main-content');
         mainContent.classList.remove('hidden');
         mainContent.classList.add('flex');
-        
+
         // Delay fade-in of the text slightly so it's smooth
         setTimeout(() => {
             mainContent.classList.remove('opacity-0');
@@ -62,26 +62,26 @@ window.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('scroll', () => {
     const sections = document.querySelectorAll('.page-section');
     const windowHeight = window.innerHeight;
-    
+
     sections.forEach(section => {
         const rect = section.getBoundingClientRect();
-        
+
         // Fade out and parallax up as the section scrolls above the viewport
         if (rect.top <= 0) {
             // Calculate delay: if the section is taller than the viewport (such as #skills),
             // wait until we have scrolled through the extra content before beginning to fade out.
             const fadeDelay = Math.max(0, rect.height - windowHeight * 0.75);
             const scrolledPast = Math.abs(rect.top);
-            
+
             let opacity = 1;
             if (scrolledPast > fadeDelay) {
                 // Once past the delay threshold, fade out smoothly over 600px of scrolling
                 const distanceToFade = scrolledPast - fadeDelay;
                 opacity = 1 - (distanceToFade / 600);
             }
-            
-            let translateY = scrolledPast * 0.15; 
-            
+
+            let translateY = scrolledPast * 0.15;
+
             if (opacity < 0) opacity = 0;
 
             section.style.opacity = opacity;
@@ -104,7 +104,7 @@ const observer = new IntersectionObserver((entries) => {
         if (entry.isIntersecting) {
             entry.target.classList.add('is-revealed');
             // Stop observing once revealed so it doesn't animate out and in repeatedly
-            observer.unobserve(entry.target); 
+            observer.unobserve(entry.target);
         }
     });
 }, observerOptions);
@@ -131,7 +131,7 @@ function closeModal() {
 // Listen for the form submission and send to Google Forms
 contactForm.addEventListener('submit', (e) => {
     e.preventDefault(); // Prevent the page from reloading
-    
+
     const submitBtn = document.getElementById('submit-btn');
     const originalBtnText = submitBtn ? submitBtn.innerText : 'Submit';
     if (submitBtn) {
@@ -174,3 +174,116 @@ contactForm.addEventListener('submit', (e) => {
 // Close the modal when clicking the button or the blurred background
 closeModalBtn.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', closeModal);
+
+// 7. Resume Modal, Dynamic PDF Loading & Instant Download Logic
+const viewResumeBtn = document.getElementById('view-resume-btn');
+const resumeModal = document.getElementById('resume-modal');
+const resumeModalContent = document.getElementById('resume-modal-content');
+const closeResumeModalBtn = document.getElementById('close-resume-modal');
+const resumeModalOverlay = document.getElementById('resume-modal-overlay');
+const resumeIframe = document.getElementById('resume-iframe');
+
+if (viewResumeBtn) {
+    viewResumeBtn.addEventListener('click', (e) => {
+        // Detect if user is on mobile view (width < 768px or touch mobile device)
+        const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (!isMobile) {
+            // In PC view: Prevent opening new tab, pop up the modal box in the same tab showing the PDF
+            e.preventDefault();
+            // Lock body scroll so scrolling inside the popup box never scrolls the underlying background webpage
+            document.body.style.overflow = 'hidden';
+            if (resumeIframe && !resumeIframe.src.includes('deepak_dinesh_cv.pdf')) {
+                resumeIframe.src = 'assets/deepak_dinesh_cv.pdf#toolbar=0';
+            }
+            if (resumeModal && resumeModalContent) {
+                resumeModal.classList.remove('opacity-0', 'pointer-events-none');
+                resumeModal.classList.add('opacity-100', 'pointer-events-auto');
+                resumeModalContent.classList.remove('scale-95');
+                resumeModalContent.classList.add('scale-100');
+            }
+        }
+        // In mobile view: Let default link behavior trigger redirect to next tab (`target="_blank"`) showing the resume
+    });
+}
+
+function closeResumeModal() {
+    if (resumeModal && resumeModalContent) {
+        // Restore background webpage scroll
+        document.body.style.overflow = '';
+        resumeModal.classList.remove('opacity-100', 'pointer-events-auto');
+        resumeModal.classList.add('opacity-0', 'pointer-events-none');
+        resumeModalContent.classList.remove('scale-100');
+        resumeModalContent.classList.add('scale-95');
+        setTimeout(() => {
+            if (resumeIframe) resumeIframe.src = '';
+        }, 300);
+    }
+}
+
+if (closeResumeModalBtn) {
+    closeResumeModalBtn.addEventListener('click', closeResumeModal);
+}
+if (resumeModalOverlay) {
+    resumeModalOverlay.addEventListener('click', closeResumeModal);
+    resumeModalOverlay.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+    resumeModalOverlay.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+}
+if (resumeModal) {
+    resumeModal.addEventListener('wheel', (e) => {
+        if (resumeIframe && e.target !== resumeIframe && !resumeIframe.contains(e.target)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    resumeModal.addEventListener('touchmove', (e) => {
+        if (resumeIframe && e.target !== resumeIframe && !resumeIframe.contains(e.target)) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+
+// 8. Instant Download Forced Logic (Prevents redirection/navigation when clicking Download)
+function triggerInstantDownload(url, filename, e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+            const blobUrl = window.URL.createObjectURL(blob);
+            const hiddenLink = document.createElement('a');
+            hiddenLink.style.display = 'none';
+            hiddenLink.href = blobUrl;
+            hiddenLink.download = filename || 'Deepak_Dinesh_CV.pdf';
+            document.body.appendChild(hiddenLink);
+            hiddenLink.click();
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(hiddenLink);
+        })
+        .catch(err => {
+            console.warn('Blob fetch failed, using fallback download frame:', err);
+            let hiddenIframe = document.getElementById('hidden-download-iframe');
+            if (!hiddenIframe) {
+                hiddenIframe = document.createElement('iframe');
+                hiddenIframe.id = 'hidden-download-iframe';
+                hiddenIframe.style.display = 'none';
+                document.body.appendChild(hiddenIframe);
+            }
+            hiddenIframe.src = url;
+        });
+}
+
+const downloadCvBtn = document.getElementById('download-cv-btn');
+const modalDownloadBtn = document.getElementById('modal-download-btn');
+
+if (downloadCvBtn) {
+    downloadCvBtn.addEventListener('click', (e) => {
+        triggerInstantDownload('assets/deepak_dinesh_cv.pdf', 'Deepak_Dinesh_CV.pdf', e);
+    });
+}
+if (modalDownloadBtn) {
+    modalDownloadBtn.addEventListener('click', (e) => {
+        triggerInstantDownload('assets/deepak_dinesh_cv.pdf', 'Deepak_Dinesh_CV.pdf', e);
+    });
+}
