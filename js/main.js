@@ -202,8 +202,28 @@ if (viewResumeBtn) {
                 resumeModalContent.classList.remove('scale-95');
                 resumeModalContent.classList.add('scale-100');
             }
+        } else {
+            // In mobile view: Mobile browsers (Android Chrome) often show a blank page when opening raw PDF links.
+            // When hosted on a website (`http`/`https`), open Google Docs Viewer so the PDF renders clearly on mobile screen!
+            if (window.location.protocol !== 'file:') {
+                e.preventDefault();
+                const absolutePdfUrl = new URL('assets/deepak_dinesh_cv.pdf', window.location.href).href;
+                window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(absolutePdfUrl)}`, '_blank');
+            }
         }
-        // In mobile view: Let default link behavior trigger redirect to next tab (`target="_blank"`) showing the resume
+    });
+}
+
+// Also handle the Open in New Tab button inside the modal when clicked on mobile
+const openTabBtn = document.getElementById('open-tab-btn');
+if (openTabBtn) {
+    openTabBtn.addEventListener('click', (e) => {
+        const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile && window.location.protocol !== 'file:') {
+            e.preventDefault();
+            const absolutePdfUrl = new URL('assets/deepak_dinesh_cv.pdf', window.location.href).href;
+            window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(absolutePdfUrl)}`, '_blank');
+        }
     });
 }
 
@@ -242,22 +262,36 @@ if (resumeModal) {
     }, { passive: false });
 }
 
-// 8. Instant Download Forced Logic (Prevents redirection/navigation when clicking Download)
-function triggerInstantDownload(url, filename, e) {
-    // Detect if user is on mobile view (width < 768px or touch mobile device)
-    const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // On mobile devices, let the browser handle the direct link natively.
-    // This allows the system's confirmation prompt ("asking where to download") to work naturally,
-    // and when the user presses Cancel, the download cleanly aborts without showing "Download completed"!
-    if (isMobile) {
-        return;
-    }
+// 8. Instant Download Forced Logic & Mobile Click Debounce
+let isDownloadLocked = false;
 
+function triggerInstantDownload(url, filename, e) {
     if (e) {
         e.preventDefault();
         e.stopPropagation();
     }
+
+    // Debounce: prevent rapid double taps / touch-click synthesis from spawning multiple confirmation popups
+    if (isDownloadLocked) return;
+    isDownloadLocked = true;
+    setTimeout(() => { isDownloadLocked = false; }, 1500);
+
+    // Detect if user is on mobile view (width < 768px or touch mobile device)
+    const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        // On mobile devices, create a temporary download link and click it once programmatically.
+        // Because of e.preventDefault() + our debounce lock, this fires EXACTLY ONE confirmation prompt.
+        // When the user clicks Cancel, it clears instantly without staying or requiring multiple clicks!
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename || 'Deepak_Dinesh_CV.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+    }
+
     fetch(url)
         .then(response => response.blob())
         .then(blob => {
