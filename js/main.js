@@ -244,6 +244,16 @@ if (resumeModal) {
 
 // 8. Instant Download Forced Logic (Prevents redirection/navigation when clicking Download)
 function triggerInstantDownload(url, filename, e) {
+    // Detect if user is on mobile view (width < 768px or touch mobile device)
+    const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // On mobile devices, let the browser handle the direct link natively.
+    // This allows the system's confirmation prompt ("asking where to download") to work naturally,
+    // and when the user presses Cancel, the download cleanly aborts without showing "Download completed"!
+    if (isMobile) {
+        return;
+    }
+
     if (e) {
         e.preventDefault();
         e.stopPropagation();
