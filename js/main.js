@@ -202,28 +202,8 @@ if (viewResumeBtn) {
                 resumeModalContent.classList.remove('scale-95');
                 resumeModalContent.classList.add('scale-100');
             }
-        } else {
-            // In mobile view: Mobile browsers (Android Chrome) often show a blank page when opening raw PDF links.
-            // When hosted on a website (`http`/`https`), open Google Docs Viewer so the PDF renders clearly on mobile screen!
-            if (window.location.protocol !== 'file:') {
-                e.preventDefault();
-                const absolutePdfUrl = new URL('assets/deepak_dinesh_cv.pdf', window.location.href).href;
-                window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(absolutePdfUrl)}`, '_blank');
-            }
         }
-    });
-}
-
-// Also handle the Open in New Tab button inside the modal when clicked on mobile
-const openTabBtn = document.getElementById('open-tab-btn');
-if (openTabBtn) {
-    openTabBtn.addEventListener('click', (e) => {
-        const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile && window.location.protocol !== 'file:') {
-            e.preventDefault();
-            const absolutePdfUrl = new URL('assets/deepak_dinesh_cv.pdf', window.location.href).href;
-            window.open(`https://docs.google.com/viewer?url=${encodeURIComponent(absolutePdfUrl)}`, '_blank');
-        }
+        // In mobile view: Let default link behavior trigger redirect to next tab (`target="_blank"`) showing the resume directly
     });
 }
 
@@ -265,10 +245,28 @@ if (resumeModal) {
 // 8. Instant Download Forced Logic & Mobile Click Debounce
 let isDownloadLocked = false;
 
+function animateDownloadButton(btn) {
+    if (!btn || !(btn instanceof HTMLElement)) return;
+    btn.blur();
+    btn.classList.add('!bg-white', '!text-black', '!border-white', 'scale-95');
+    setTimeout(() => {
+        btn.classList.remove('!bg-white', '!text-black', '!border-white', 'scale-95');
+        btn.blur();
+        // Temporarily disable pointer events for 50ms so touch screens (Android/iOS) release any stuck :hover state
+        btn.classList.add('pointer-events-none');
+        setTimeout(() => {
+            btn.classList.remove('pointer-events-none');
+        }, 50);
+    }, 350);
+}
+
 function triggerInstantDownload(url, filename, e) {
     if (e) {
         e.preventDefault();
         e.stopPropagation();
+        if (e.currentTarget) {
+            animateDownloadButton(e.currentTarget);
+        }
     }
 
     // Debounce: prevent rapid double taps / touch-click synthesis from spawning multiple confirmation popups
